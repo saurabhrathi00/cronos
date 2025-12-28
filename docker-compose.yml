@@ -1,0 +1,188 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    env_file:
+      - ./postgres-service/postgres-docker/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres-service/postgres-docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cronos_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: kafka
+    restart: always
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_CLUSTER_ID: 5L6g3nShT-eMCtK--X86sw
+
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+    networks:
+      - cronos_network
+
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:29092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  kafka-topic-init:
+    image: apache/kafka:3.7.0
+    container_name: kafka_topic_init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: >
+      bash -c "
+      /opt/kafka/bin/kafka-topics.sh
+      --bootstrap-server kafka:29092
+      --create
+      --if-not-exists
+      --topic job-events
+      --partitions 3
+      --replication-factor 1
+      "
+    networks:
+      - cronos_network
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_CONFIG_LOCATION: file:/etc/service.properties,file:/etc/secrets.properties
+    volumes:
+      - ./auth-service/configs/service.properties:/etc/service.properties
+      - ./auth-service/secrets/secrets.properties:/etc/secrets.properties
+    ports:
+      - "8080:8080"
+    networks:
+      - cronos_network
+
+  user-service:
+    build: ./user-service
+    container_name: user_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_CONFIG_LOCATION: file:/etc/service.properties,file:/etc/secrets.properties
+    volumes:
+      - ./user-service/configs/service.properties:/etc/service.properties
+      - ./user-service/secrets/secrets.properties:/etc/secrets.properties
+    ports:
+      - "8081:8080"
+    networks:
+      - cronos_network
+
+  job-service:
+    build: ./job-service
+    container_name: job_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_CONFIG_LOCATION: file:/etc/service.properties,file:/etc/secrets.properties
+    volumes:
+      - ./job-service/configs/service.properties:/etc/service.properties
+      - ./job-service/secrets/secrets.properties:/etc/secrets.properties
+    ports:
+      - "8082:8080"
+    networks:
+      - cronos_network
+
+  scheduler-service:
+    build: ./scheduler-service
+    container_name: scheduler_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_CONFIG_LOCATION: file:/etc/service.properties,file:/etc/secrets.properties
+    volumes:
+      - ./scheduler-service/configs/service.properties:/etc/service.properties
+      - ./scheduler-service/secrets/secrets.properties:/etc/secrets.properties
+    ports:
+      - "8083:8080"
+    networks:
+      - cronos_network
+
+  executor-service:
+    build: ./executor-service
+    container_name: executor_service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_CONFIG_LOCATION: file:/etc/service.properties,file:/etc/secrets.properties
+    volumes:
+      - ./executor-service/configs/service.properties:/etc/service.properties
+      - ./executor-service/secrets/secrets.properties:/etc/secrets.properties
+    ports:
+      - "8084:8080"
+    networks:
+      - cronos_network
+
+  akhq:
+    image: tchiotludo/akhq:latest
+    container_name: akhq
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8085:8080"
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            local:
+              properties:
+                bootstrap.servers: kafka:29092
+    networks:
+      - cronos_network
+
+
+volumes:
+  pg_data:
+  kafka_data:
+
+networks:
+  cronos_network:
+    driver: bridge
