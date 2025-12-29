@@ -5,7 +5,7 @@ The entire system is fully **Dockerized** and can be started using a **single do
 
 ---
 
-## 🧩 System Overview
+## System Overview
 
 The system supports:
 - One-time jobs (immediate & scheduled)
