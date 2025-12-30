@@ -7,16 +7,23 @@ import com.job_service.models.enums.JobStatus;
 import com.job_service.models.enums.JobType;
 import com.job_service.models.requests.CreateJobRequest;
 import com.job_service.models.responses.CreateJobResponse;
+import com.job_service.models.responses.JobResponse;
 import com.job_service.repository.JobRepository;
+import com.job_service.repository.specification.JobSpecifications;
 import com.job_service.utils.CronUtils;
 import com.job_service.utils.JobIdGenerator;
 import com.job_service.validators.JobValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +57,27 @@ public class JobService {
                 .status(job.getStatus().name())
                 .nextRunAt(job.getNextRunAt())
                 .build();
+    }
+
+    public Page<JobResponse> getJobs(JobStatus status,JobType jobType,Instant from,Instant to,int page,int size) {
+        jobValidator.validateGetJobs(status, jobType, from, to, page, size);
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("createdAt").descending()
+        );
+        Page<JobEntity> pageResult = jobRepository.findAll(
+                JobSpecifications.withFilters(
+                        currentUser,
+                        status,
+                        jobType,
+                        from,
+                        to
+                ),
+                pageable
+        );
+        return pageResult.map(JobResponse::from);
     }
 
     private Instant computeNextRunAt(CreateJobRequest request) {
