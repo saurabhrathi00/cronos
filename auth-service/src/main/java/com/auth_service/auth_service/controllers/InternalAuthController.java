@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/internal")
+@RequestMapping("/api/internal")
 @RequiredArgsConstructor
 public class InternalAuthController {
 

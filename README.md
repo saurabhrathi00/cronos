@@ -141,7 +141,7 @@ This section demonstrates how to test the complete system once all services are 
 Create a new user using the **User Service**.
 
 ```bash
-curl --location 'http://localhost:8081/v1/user/signup' \
+curl --location 'http://localhost:8081/user-service/api/v1/user/signup' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "username": "saurabh_rathi",
@@ -158,7 +158,7 @@ curl --location 'http://localhost:8081/v1/user/signup' \
 ### Step 2️⃣ User Sign In
 **Authenticate using the Auth Service to obtain a JWT token.**
 ```bash 
-curl --location 'http://localhost:8080/api/auth/signin' \
+curl --location 'http://localhost:8080/auth-service/api/v1/auth/signin' \
 --header 'Content-Type: application/json' \
 --data '{
     "username": "saurabh_rathi",
@@ -205,7 +205,7 @@ Payload format:
 
 ####ONE_TIME – IMMEDIATE Job
 ```bash
-curl --location 'http://localhost:8082/v1/jobs' \
+curl --location 'http://localhost:8082/job-service/api/v1/jobs' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <JWT_TOKEN>' \
 --data-raw '{
@@ -223,7 +223,7 @@ Job executes immediately.
 ####ONE_TIME – SCHEDULED Job
 runAt must be provided in UTC ISO-8601 format.
 ```bash
-curl --location 'http://localhost:8082/v1/jobs' \
+curl --location 'http://localhost:8082/job-service/api/v1/jobs' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <JWT_TOKEN>' \
 --data-raw '{
@@ -248,7 +248,7 @@ Spring-compatible cron (every 2 minutes):
 ```
 
 ```bash
-curl --location 'http://localhost:8082/v1/jobs' \
+curl --location 'http://localhost:8082/job-service/api/v1/jobs' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <JWT_TOKEN>' \
 --data-raw '{
