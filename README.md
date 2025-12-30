@@ -89,17 +89,19 @@ You can:
 3. Role scopes:
    1. jobs.create
    2. jobs.read
+   3. jobs.update
 4. User signs in via Auth Service 
 5. JWT issued 
 6. JWT required for job creation APIs
 
 #Job Scheduling Flow
-**_Job Creation_** 
-1. API exposed by Job Service 
+**_Job Creation And Management_** 
+1. APIs exposed by Job Service
 2. Supports:
    1. ONE_TIME (IMMEDIATE / SCHEDULED)
    2. RECURRING (cron-based)
 3. Job stored in PostgreSQL with SCHEDULED status
+   
 
 **_Scheduling_**
 1. Scheduler polls DB for due jobs 
@@ -269,9 +271,38 @@ curl --location 'http://localhost:8082/job-service/api/v1/jobs' \
 --header 'Authorization: Bearer  <JWT_TOKEN>'
 ```
 
+### To cancel a job
+```bash
+curl --location 'http://localhost:8082/job-service/api/v1/jobs/{jobId}/cancel' \
+--header 'Authorization: Bearer  <JWT_TOKEN>'
+```
+
 This will return the list of jobs with the current state for the current user.
 
+### To cancel a job
+```bash
+curl --location 'http://localhost:8082/job-service/api/v1/jobs/{jobId}/cancel' \
+--header 'Authorization: Bearer  <JWT_TOKEN>'
+```
 
+
+### To cancel a job
+```bash
+curl --location 'http://localhost:8082/job-service/api/v1/jobs/{jobId}/cancel' \
+--header 'Authorization: Bearer  <JWT_TOKEN>'
+```
+This will perform validation as only jobs that are SCHEDULED can be cancelled.
+
+### To reschedule a job
+```bash
+curl --location 'http://localhost:8082/job-service/api/v1/jobs/{jobId}/reschedule' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <JWT_TOKEN>' \
+--data-raw '{
+  "runAt": "2025-12-28T08:26:00.197181Z"
+}'
+```
+This will perform validation as only ONE_TIME and SCHEDULED jobs can be rescheduled.
 
 #What Happens Internally
 
