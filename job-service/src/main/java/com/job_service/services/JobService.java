@@ -1,11 +1,13 @@
 package com.job_service.services;
 
 import com.job_service.exceptions.BadRequestException;
+import com.job_service.exceptions.ResourceNotFoundException;
 import com.job_service.models.dao.JobEntity;
 import com.job_service.models.enums.ExecutionMode;
 import com.job_service.models.enums.JobStatus;
 import com.job_service.models.enums.JobType;
 import com.job_service.models.requests.CreateJobRequest;
+import com.job_service.models.requests.RescheduleJobRequest;
 import com.job_service.models.responses.CreateJobResponse;
 import com.job_service.models.responses.JobResponse;
 import com.job_service.repository.JobRepository;
@@ -78,6 +80,57 @@ public class JobService {
                 pageable
         );
         return pageResult.map(JobResponse::from);
+    }
+
+    @Transactional
+    public void cancelJob(String jobId) throws BadRequestException {
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        JobEntity job = jobRepository
+                .findByJobIdAndCreatedBy(jobId, currentUser)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Job not found: " + jobId)
+                );
+
+        if (job.getStatus() != JobStatus.SCHEDULED) {
+            throw new BadRequestException(
+                    "Job cannot be cancelled in status " + job.getStatus()
+            );
+        }
+        job.setStatus(JobStatus.CANCELLED);
+    }
+
+    @Transactional
+    public void rescheduleJob(
+            String jobId,
+            RescheduleJobRequest request
+    ) {
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        JobEntity job = jobRepository
+                .findByJobIdAndCreatedBy(jobId, currentUser)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Job not found: " + jobId)
+                );
+        // Only SCHEDULED jobs
+        if (job.getStatus() != JobStatus.SCHEDULED || job.getExecutionMode() != ExecutionMode.SCHEDULED) {
+            throw new BadRequestException(
+                    "Only scheduled jobs can be rescheduled"
+            );
+        }
+
+        if (request.getRunAt().isBefore(Instant.now())) {
+            throw new BadRequestException(
+                    "runAt must be in the future"
+            );
+        }
+
+        // Only ONE_TIME jobs
+        if (job.getJobType() != JobType.ONE_TIME) {
+            throw new BadRequestException(
+                    "Only ONE_TIME jobs can be rescheduled"
+            );
+        }
+
+        job.setNextRunAt(request.getRunAt());
     }
 
     private Instant computeNextRunAt(CreateJobRequest request) {

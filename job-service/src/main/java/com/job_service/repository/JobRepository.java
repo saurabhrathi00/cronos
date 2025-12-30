@@ -11,4 +11,9 @@ import java.util.Optional;
 public interface JobRepository extends JpaRepository<JobEntity, String>, JpaSpecificationExecutor<JobEntity> {
 
     Optional<JobEntity> findByJobId(String jobId);
+
+    Optional<JobEntity> findByJobIdAndCreatedBy(
+            String jobId,
+            String createdBy
+    );
 }
