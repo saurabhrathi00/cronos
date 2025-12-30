@@ -1,5 +1,6 @@
 package com.executor_service.services;
 
+import com.executor_service.configurations.ServiceConfiguration;
 import com.executor_service.exceptions.JobValidationException;
 import com.executor_service.models.JobEvent;
 import com.executor_service.models.dao.JobEntity;

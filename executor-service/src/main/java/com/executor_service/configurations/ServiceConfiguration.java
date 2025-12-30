@@ -12,6 +12,7 @@ public class ServiceConfiguration {
 
     private JobDb jobDb;
     private Kafka kafka;
+    private Retry retry;
 
     @Data
     public static class JobDb {
@@ -40,6 +41,14 @@ public class ServiceConfiguration {
             private int maxPollIntervalMs;
             private int concurrency;
         }
+    }
+
+    @Data
+    public static class Retry {
+        /**
+         * Max execution attempts for a job before marking it FAILED
+         */
+        private int maxAttempts;
     }
 }
 

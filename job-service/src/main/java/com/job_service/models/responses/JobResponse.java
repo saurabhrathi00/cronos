@@ -20,6 +20,11 @@ public class JobResponse {
     private Instant nextRunAt;
     private Instant createdAt;
 
+    // 👇 IMPORTANT for notification
+    private String failureReason;
+    private Instant failedAt;
+    private int attempts;
+
     public static JobResponse from(JobEntity job) {
         return JobResponse.builder()
                 .jobId(job.getJobId())
@@ -27,6 +32,9 @@ public class JobResponse {
                 .status(job.getStatus())
                 .nextRunAt(job.getNextRunAt())
                 .createdAt(job.getCreatedAt())
+                .failureReason(job.getFailureReason())
+                .failedAt(job.getFailedAt())
+                .attempts(job.getAttempts())
                 .build();
     }
 }
