@@ -87,7 +87,8 @@ You can:
 1. User signs up via User Service 
 2. Default role assigned: ROLE_USER 
 3. Role scopes:
-   1. jobs.create 
+   1. jobs.create
+   2. jobs.read
 4. User signs in via Auth Service 
 5. JWT issued 
 6. JWT required for job creation APIs
@@ -259,6 +260,17 @@ curl --location 'http://localhost:8082/v1/jobs' \
   "cronExpression": "0 */2 * * * *"
 }'
 ```
+
+
+### To get the jobs
+```bash
+curl --location 'http://localhost:8082/job-service/api/v1/jobs' \
+--header 'Authorization: Bearer  <JWT_TOKEN>'
+```
+
+This will return the list of jobs with the current state for the current user.
+
+
 
 #What Happens Internally
 
