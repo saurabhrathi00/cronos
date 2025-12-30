@@ -27,7 +27,14 @@ public class SendEmailJobExecutor implements JobExecutor {
                 job.getJobId(),
                 template
         );
-
+        // Here you would integrate with an email service to send the actual email
+        // for now we can put sleep to simulate delay
+        try {
+            Thread.sleep(2000); // Simulate email sending delay
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Email sending interrupted for jobId={}", job.getJobId());
+        }
     }
 }
 

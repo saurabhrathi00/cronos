@@ -72,7 +72,6 @@ public class UserService {
                 .status("SUCCESS")
                 .message("User registered successfully")
                 .data(SignupResponse.UserData.builder()
-                        .userId(user.getId()) // assuming ULID or UUID
                         .username(user.getUsername())
                         .email(user.getEmail())
                         .build())

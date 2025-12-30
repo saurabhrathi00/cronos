@@ -1,17 +1,21 @@
 package com.job_service.controllers;
 
+import com.job_service.models.enums.JobStatus;
+import com.job_service.models.enums.JobType;
 import com.job_service.models.requests.CreateJobRequest;
 import com.job_service.models.responses.CreateJobResponse;
+import com.job_service.models.responses.JobResponse;
 import com.job_service.services.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/jobs")
@@ -30,5 +34,23 @@ public class JobController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('jobs.read')")
+    public ResponseEntity<List<JobResponse>> getMyJobs(
+            @RequestParam(required = false) JobStatus status,
+            @RequestParam(required = false) JobType jobType,
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "1") int page
+    ) {
+        int safePage = Math.max(page - 1, 0);
+        Page<JobResponse> jobs = jobService.getJobs(status,jobType,from,to,safePage,size);
+
+        return ResponseEntity
+                .ok(jobs.getContent());
     }
 }

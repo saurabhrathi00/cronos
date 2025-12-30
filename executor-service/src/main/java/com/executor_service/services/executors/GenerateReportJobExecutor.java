@@ -27,6 +27,13 @@ public class GenerateReportJobExecutor implements JobExecutor {
                 job.getJobId(),
                 template
         );
+
+        try {
+            Thread.sleep(2000); // Simulate report generation delay
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Report generation interrupted for jobId={}", job.getJobId());
+        }
     }
 }
 

@@ -21,7 +21,6 @@ public class SignupResponse {
     @Builder         // ✅ Add this
     @Jacksonized     // ✅ Add this too for proper Jackson support
     public static class UserData {
-        private String userId;   // ULID
         private String username;
         private String email;
     }

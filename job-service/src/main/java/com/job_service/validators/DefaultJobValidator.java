@@ -2,14 +2,18 @@ package com.job_service.validators;
 
 import com.job_service.exceptions.BadRequestException;
 import com.job_service.models.enums.ExecutionMode;
+import com.job_service.models.enums.JobStatus;
 import com.job_service.models.enums.JobType;
 import com.job_service.models.requests.CreateJobRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.time.Instant;
+
 @Component
 public class DefaultJobValidator implements JobValidator {
 
+    private static final int MAX_PAGE_SIZE = 100;
     @Override
     public void validate(CreateJobRequest request) throws BadRequestException {
 
@@ -36,6 +40,36 @@ public class DefaultJobValidator implements JobValidator {
 
             default:
                 throw new BadRequestException("Unsupported jobType: " + jobType);
+        }
+    }
+
+    @Override
+    public void validateGetJobs(
+            JobStatus status,
+            JobType jobType,
+            Instant from,
+            Instant to,
+            int page,
+            int size
+    ) {
+        validatePagination(page, size);
+        validateTimeRange(from, to);
+    }
+
+    private void validatePagination(int page, int size) {
+        if (page < 0) {
+            throw new BadRequestException("page must be >= 0");
+        }
+        if (size <= 0 || size > MAX_PAGE_SIZE) {
+            throw new BadRequestException(
+                    "size must be between 1 and " + MAX_PAGE_SIZE);
+        }
+    }
+
+    private void validateTimeRange(Instant from, Instant to) {
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new BadRequestException(
+                    "'from' must be before or equal to 'to'");
         }
     }
 
