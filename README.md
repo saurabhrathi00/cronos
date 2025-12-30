@@ -125,7 +125,8 @@ You can:
 
 #Configuration Management
 **_Each service reads configs from:_**
-```/etc/service.properties
+```
+/etc/service.properties
 /etc/secrets.properties
 ```
 
