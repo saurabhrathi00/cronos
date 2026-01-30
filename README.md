@@ -271,19 +271,7 @@ curl --location 'http://localhost:8082/job-service/api/v1/jobs' \
 --header 'Authorization: Bearer  <JWT_TOKEN>'
 ```
 
-### To cancel a job
-```bash
-curl --location 'http://localhost:8082/job-service/api/v1/jobs/{jobId}/cancel' \
---header 'Authorization: Bearer  <JWT_TOKEN>'
-```
-
 This will return the list of jobs with the current state for the current user.
-
-### To cancel a job
-```bash
-curl --location 'http://localhost:8082/job-service/api/v1/jobs/{jobId}/cancel' \
---header 'Authorization: Bearer  <JWT_TOKEN>'
-```
 
 
 ### To cancel a job
